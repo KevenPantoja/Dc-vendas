@@ -5,9 +5,6 @@
   <div class="d-flex justify-content-between align-items-center mb-3">
     <h3>Minhas Vendas</h3>
     <div>
-      <a href="{{ route('vendas.cliente_add') }}" class="btn btn-secondary me-2">
-        <i class="bi bi-plus-circle"></i> Cadastrar Cliente
-      </a>
       <a href="{{ route('vendas.create') }}" class="btn btn-primary">
         <i class="bi bi-plus-circle"></i> Cadastrar Nova Venda
       </a>

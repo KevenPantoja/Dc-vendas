@@ -7,6 +7,14 @@
     <a href="{{ route('vendas.create') }}" class="btn btn-primary">Cadastrar Nova Venda</a>
   </div>
 
+  <div class="container mt-4">
+  <div class="d-flex justify-content-between align-items-center mb-3">
+    <a href="{{ route('vendas.createCliente') }}" class="btn btn-secondary me-2">
+    <i class="bi bi-plus-circle"></i> Cadastrar Cliente
+    </a>
+  </div>
+
+
   <!-- Filtros -->
   <form method="GET" action="{{ route('vendas.index') }}" class="row g-3 mb-4">
     <div class="col-md-3">

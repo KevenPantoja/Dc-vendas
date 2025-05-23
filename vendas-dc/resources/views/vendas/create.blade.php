@@ -27,6 +27,7 @@
           <th>Quantidade</th>
           <th>Valor Unitário (R$)</th>
           <th>Ações</th>
+          <th>Total</th>
         </tr>
       </thead>
       <tbody>
@@ -35,13 +36,14 @@
             <select name="produtos[]" class="form-select" required>
               <option value="">-- Selecione --</option>
               @foreach($produtos as $produto)
-              <option value="{{ $produto->id }}">{{ $produto->nome }}</option>
+              <option value="{{ $produto->id }}" data-preco="{{ $produto->preco }}">{{ $produto->nome }}</option>
               @endforeach
             </select>
           </td>
           <td><input type="number" name="quantidades[]" class="form-control" min="1" value="1" required></td>
           <td><input type="number" step="0.01" name="valores[]" class="form-control" min="0" required></td>
           <td><button type="button" class="btn btn-danger btn-remove-item">Remover</button></td>
+          <td class="valor-total">R$ 0,00</td>
         </tr>
       </tbody>
     </table>
@@ -83,32 +85,34 @@
 </div>
 
 <script>
-  document.addEventListener('DOMContentLoaded', function() {
-    // Adicionar item
-    document.getElementById('add-item').addEventListener('click', function() {
-      const tbody = document.querySelector('#itens-table tbody');
-      const tr = document.createElement('tr');
-      tr.innerHTML = `
-        <td>
-          <select name="produtos[]" class="form-select" required>
-            <option value="">-- Selecione --</option>
-            @foreach($produtos as $produto)
-            <option value="{{ $produto->id }}">{{ $produto->nome }}</option>
-            @endforeach
-          </select>
-        </td>
-        <td><input type="number" name="quantidades[]" class="form-control" min="1" value="1" required></td>
-        <td><input type="number" step="0.01" name="valores[]" class="form-control" min="0" required></td>
-        <td><button type="button" class="btn btn-danger btn-remove-item">Remover</button></td>
-      `;
-      tbody.appendChild(tr);
+  document.addEventListener('DOMContentLoaded', function () {
+    const tabelaItens = document.querySelector('#itens-table tbody');
+
+    function calcularTotalItem(row) {
+      const quantidade = parseFloat(row.querySelector('input[name="quantidades[]"]').value) || 0;
+      const valorUnitario = parseFloat(row.querySelector('input[name="valores[]"]').value) || 0;
+      const total = quantidade * valorUnitario;
+      row.querySelector('.valor-total').textContent = `R$ ${total.toFixed(2)}`;
+    }
+
+    tabelaItens.addEventListener('change', function (e) {
+      const row = e.target.closest('tr');
+
+      if (e.target.name === 'produtos[]') {
+        const preco = e.target.selectedOptions[0].dataset.preco;
+        row.querySelector('input[name="valores[]"]').value = preco;
+        calcularTotalItem(row);
+      }
+
+      if (e.target.name === 'quantidades[]' || e.target.name === 'valores[]') {
+        calcularTotalItem(row);
+      }
     });
 
-    // Remover item
-    document.querySelector('#itens-table').addEventListener('click', function(e) {
-      if(e.target.classList.contains('btn-remove-item')) {
-        const rows = document.querySelectorAll('#itens-table tbody tr');
-        if(rows.length > 1) {
+    tabelaItens.addEventListener('click', function (e) {
+      if (e.target.classList.contains('btn-remove-item')) {
+        const rows = tabelaItens.querySelectorAll('tr');
+        if (rows.length > 1) {
           e.target.closest('tr').remove();
         } else {
           alert('Deve haver pelo menos um item.');
@@ -116,8 +120,19 @@
       }
     });
 
-    // Adicionar parcela
-    document.getElementById('add-parcela').addEventListener('click', function() {
+    document.getElementById('add-item').addEventListener('click', function () {
+      const novaLinha = tabelaItens.querySelector('tr').cloneNode(true);
+
+      novaLinha.querySelector('select').selectedIndex = 0;
+      novaLinha.querySelector('input[name="quantidades[]"]').value = 1;
+      novaLinha.querySelector('input[name="valores[]"]').value = '';
+      novaLinha.querySelector('.valor-total').textContent = 'R$ 0,00';
+
+      tabelaItens.appendChild(novaLinha);
+    });
+
+    // Parcelas
+    document.getElementById('add-parcela').addEventListener('click', function () {
       const tbody = document.querySelector('#parcelas-table tbody');
       const tr = document.createElement('tr');
       tr.innerHTML = `
@@ -128,11 +143,10 @@
       tbody.appendChild(tr);
     });
 
-    // Remover parcela
-    document.querySelector('#parcelas-table').addEventListener('click', function(e) {
-      if(e.target.classList.contains('btn-remove-parcela')) {
+    document.querySelector('#parcelas-table').addEventListener('click', function (e) {
+      if (e.target.classList.contains('btn-remove-parcela')) {
         const rows = document.querySelectorAll('#parcelas-table tbody tr');
-        if(rows.length > 1) {
+        if (rows.length > 1) {
           e.target.closest('tr').remove();
         } else {
           alert('Deve haver pelo menos uma parcela.');

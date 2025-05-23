@@ -10,10 +10,13 @@
     <!-- Bootstrap CSS -->
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
 
+    <!-- Bootstrap Icons -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.5/font/bootstrap-icons.css">
+
     <!-- Fonte opcional -->
     <link href="https://fonts.bunny.net/css?family=figtree:400,500,600&display=swap" rel="stylesheet" />
 
-    <!-- Laravel Scripts -->
+    <!-- Laravel Scripts via Vite -->
     @vite(['resources/css/app.css', 'resources/js/app.js'])
 
     <style>
@@ -36,13 +39,13 @@
     @endisset
 
     <!-- Conteúdo principal -->
-    <main class="d-flex flex-column justify-content-center align-items-center py-5" style="min-height: calc(100vh - 100px);">
+    <main class="py-4">
         <div class="container">
             @yield('content')
         </div>
     </main>
 
-    <!-- Bootstrap Bundle -->
+    <!-- Bootstrap JS Bundle -->
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
 </body>
 </html>

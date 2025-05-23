@@ -158,4 +158,78 @@ class VendaController extends Controller
     return redirect()->route('vendas.index')->with('success', 'Venda excluída com sucesso!');
 }
 
+    public function createCliente()
+    {
+        return view('vendas.cliente_add');  // Assumindo que a view está em resources/views/clientes/create.blade.php
+    }
+
+    // Armazena o cliente via formulário padrão (rota POST /clientes)
+    public function storeCliente(Request $request)
+    {
+        $request->validate([
+            'nome' => 'required|string|max:255',
+            'cpf' => 'nullable|string|max:20|unique:clientes,cpf',
+            'telefone' => 'nullable|string|max:20',
+            'email' => 'nullable|email|max:255|unique:clientes,email',
+        ]);
+
+        Cliente::create($request->only('nome', 'cpf', 'telefone', 'email'));
+
+        return redirect()->route('vendas.cliente_add')->with('success', 'Cliente criado com sucesso!');
+    }
+
+    // Armazena cliente via AJAX (rota POST /clientes/ajax)
+    public function storeClienteAjax(Request $request)
+    {
+        $request->validate([
+            'nome' => 'required|string|max:255',
+            'cpf' => 'nullable|string|max:20|unique:clientes,cpf',
+            'telefone' => 'nullable|string|max:20',
+            'email' => 'nullable|email|max:255|unique:clientes,email',
+            'tipo_pessoa' => 'required|string|in:pf,pj',
+        ]);
+
+        $cliente = Cliente::create($request->only('nome', 'cpf', 'telefone', 'email', 'tipo_pessoa'));
+
+        return response()->json([
+            'success' => true,
+            'cliente' => $cliente,
+            'message' => 'Cliente cadastrado com sucesso via AJAX.'
+            
+        ]);
+    }
+
+   
+public function indexProdutos()
+{
+    $produtos = Produto::orderBy('nome')->paginate(10);
+    return view('vendas.produtos', compact('produtos'));
+}
+
+public function createProduto()
+{
+    return view('vendas.produto_add');
+
+}
+
+public function storeProduto(Request $request)
+{
+    $request->validate([
+        'nome' => 'required|string|max:255',
+        'descricao' => 'nullable|string|max:1000',
+        'preco' => 'required|numeric|min:0',
+        'estoque' => 'required|integer|min:0',
+    ]);
+
+    Produto::create([
+        'nome' => $request->nome,
+        'descricao' => $request->descricao,
+        'preco' => $request->preco,
+        'estoque' => $request->estoque,
+    ]);
+
+    return redirect()->route('vendas.produtos.index')->with('success', 'Produto cadastrado com sucesso!');
+}
+
+
 }
