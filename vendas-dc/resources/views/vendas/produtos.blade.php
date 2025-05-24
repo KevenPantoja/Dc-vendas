@@ -22,7 +22,6 @@
             <tr>
                 <th class="border px-4 py-2 text-left">Nome</th>
                 <th class="border px-4 py-2 text-right">Valor de Venda (R$)</th>
-                <th class="border px-4 py-2 text-right">Valor de Compra (R$)</th>
                 <th class="border px-4 py-2 text-center">Data do Cadastro</th>
                 <th class="border px-4 py-2 text-right">Estoque</th>
             </tr>
@@ -32,7 +31,6 @@
                 <tr class="hover:bg-gray-50">
                     <td class="border px-4 py-2">{{ $produto->nome }}</td>
                     <td class="border px-4 py-2 text-right">{{ number_format($produto->preco, 2, ',', '.') }}</td>
-                    <td class="border px-4 py-2 text-right">{{ number_format($produto->valor_compra, 2, ',', '.') }}</td>
                     <td class="border px-4 py-2 text-center">{{ $produto->created_at->format('d/m/Y') }}</td>
                     <td class="border px-4 py-2 text-right">{{ $produto->estoque }}</td>
                 </tr>

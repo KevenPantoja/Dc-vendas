@@ -164,19 +164,22 @@ class VendaController extends Controller
     }
 
     // Armazena o cliente via formulário padrão (rota POST /clientes)
-    public function storeCliente(Request $request)
-    {
-        $request->validate([
-            'nome' => 'required|string|max:255',
-            'cpf' => 'nullable|string|max:20|unique:clientes,cpf',
-            'telefone' => 'nullable|string|max:20',
-            'email' => 'nullable|email|max:255|unique:clientes,email',
-        ]);
+   public function storeCliente(Request $request)
+{
+    // Validação (opcional)
+    $validated = $request->validate([
+        'nome' => 'required|string|max:255',
+        'cpf' => 'required|string|max:20',
+        'tipo' => 'required|in:Física,Jurídica',
+        // outros campos conforme necessário
+    ]);
 
-        Cliente::create($request->only('nome', 'cpf', 'telefone', 'email'));
+    // Criação do cliente
+    Cliente::create($validated);
 
-        return redirect()->route('vendas.cliente_add')->with('success', 'Cliente criado com sucesso!');
-    }
+    // Redireciona de volta com mensagem de sucesso
+    return redirect()->back()->with('success', 'Cliente cadastrado com sucesso!');
+}
 
     // Armazena cliente via AJAX (rota POST /clientes/ajax)
     public function storeClienteAjax(Request $request)

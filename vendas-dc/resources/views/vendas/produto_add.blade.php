@@ -24,20 +24,10 @@
                 class="form-control" />
         </div>
 
-        <div class="mb-3">
-            <label for="descricao" class="form-label">Descrição</label>
-            <textarea name="descricao" id="descricao" rows="3" class="form-control">{{ old('descricao') }}</textarea>
-        </div>
-
         <div class="row">
             <div class="col-md-6 mb-3">
                 <label for="preco" class="form-label">Preço (Valor de Venda) (R$) <span class="text-danger">*</span></label>
                 <input type="number" step="0.01" min="0" name="preco" id="preco" value="{{ old('preco') }}" required
-                    class="form-control" />
-            </div>
-            <div class="col-md-6 mb-3">
-                <label for="valor_compra" class="form-label">Valor de Compra (R$) <span class="text-danger">*</span></label>
-                <input type="number" step="0.01" min="0" name="valor_compra" id="valor_compra" value="{{ old('valor_compra') }}" required
                     class="form-control" />
             </div>
         </div>
