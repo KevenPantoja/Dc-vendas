@@ -17,19 +17,11 @@ Route::middleware(['auth'])->group(function () {
     Route::get('/profile', [ProfileController::class, 'edit'])->name('profile.edit');
     Route::patch('/profile', [ProfileController::class, 'update'])->name('profile.update');
     Route::delete('/profile', [ProfileController::class, 'destroy'])->name('profile.destroy');
-
-    // ✅ Modificado para não gerar erro do método show
     Route::resource('vendas', VendaController::class)->except(['show']);
-
     Route::get('vendas/{id}/exportar-pdf', [VendaController::class, 'exportarPdf'])->name('vendas.exportarPdf');
     Route::post('/clientes/ajax', [VendaController::class, 'storeClienteAjax'])->name('clientes.storeAjax');
-
-    // ✅ Removido o caminho duplicado para evitar ambiguidade
     Route::get('/clientes/create', [VendaController::class, 'createCliente'])->name('clientes.create');
-
     Route::post('/clientes', [VendaController::class, 'storeCliente'])->name('clientes.store');
-
-    // ✅ Mantido o acesso pela rota usada na view (cliente_add)
     Route::get('/vendas/clientes/novo', [VendaController::class, 'createCliente'])->name('vendas.createCliente');  
 });
 
@@ -39,6 +31,11 @@ Route::prefix('vendas')->group(function () {
     Route::post('produtos', [VendaController::class, 'storeProduto'])->name('vendas.produtos.store');
 });
 
+Route::post('/vendas', [VendaController::class, 'store'])->name('vendas.store');
+Route::get('/relatorio-vendas', [VendaController::class, 'relatorio'])->name('vendas.relatorio');
+Route::get('/relatorio-vendas/pdf', [VendaController::class, 'relatorioPdf'])->name('vendas.relatorioPdf');
+Route::get('/relatorio-vendas/excel', [VendaController::class, 'relatorioExcel'])->name('vendas.relatorioExcel');
+Route::get('/vendas/{venda}/pdf', [VendaController::class, 'gerarPdf'])->name('vendas.pdf');
 
 
 require __DIR__.'/auth.php';

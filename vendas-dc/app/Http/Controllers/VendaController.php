@@ -10,9 +10,12 @@ use App\Models\FormaPagamento;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Barryvdh\DomPDF\Facade\Pdf;
+use App\Exports\RelatorioVendasExport;
+use Maatwebsite\Excel\Facades\Excel;
 
 class VendaController extends Controller
 {
+    // Listagem de vendas com filtros
     public function index(Request $request)
     {
         $vendas = Venda::with('cliente', 'formaPagamento')
@@ -28,25 +31,17 @@ class VendaController extends Controller
         return view('vendas.index', compact('vendas'));
     }
 
-    public function edit($id)
-    {
-        $venda = Venda::with('itens.produto', 'parcelas', 'cliente')->findOrFail($id);
-        $clientes = Cliente::all();
-        $produtos = Produto::all();
-        $formas = FormaPagamento::all();
-
-        // Passa os dados para a view
-        return view('vendas.edit', compact('venda', 'clientes', 'produtos', 'formas'));
-    }
-
+    // Formulário de criação de venda
     public function create()
     {
         $clientes = Cliente::all();
         $produtos = Produto::all();
         $formas = FormaPagamento::all();
+
         return view('vendas.create', compact('clientes', 'produtos', 'formas'));
     }
 
+    // Armazenamento da venda
     public function store(Request $request)
     {
         $request->validate([
@@ -84,63 +79,71 @@ class VendaController extends Controller
             ]);
         }
 
-        return redirect()->route('vendas.index')->with('success', 'Venda cadastrada com sucesso!');
+        return redirect()->route('vendas.create')->with('success', 'Venda cadastrada com sucesso! Faça um novo cadastro.');
     }
 
+    // Formulário de edição
+    public function edit($id)
+    {
+        $venda = Venda::with('itens.produto', 'parcelas', 'cliente')->findOrFail($id);
+        $clientes = Cliente::all();
+        $produtos = Produto::all();
+        $formas = FormaPagamento::all();
+
+        return view('vendas.edit', compact('venda', 'clientes', 'produtos', 'formas'));
+    }
+
+    // Atualização da venda
     public function update(Request $request, $id)
-{
-    $venda = Venda::findOrFail($id);
+    {
+        $venda = Venda::findOrFail($id);
 
-    // Validação básica (pode ser expandida)
-    $request->validate([
-        'cliente_id' => 'nullable|exists:clientes,id',
-        'forma_pagamento_id' => 'required|exists:formas_pagamento,id',
-        'produtos' => 'required|array',
-        'quantidades' => 'required|array',
-        'valores' => 'required|array',
-        'parcelas_valores' => 'required|array',
-        'parcelas_datas' => 'required|array',
-    ]);
-
-    // Atualiza dados da venda
-    $venda->cliente_id = $request->cliente_id;
-    $venda->forma_pagamento_id = $request->forma_pagamento_id;
-    $venda->save();
-
-    // Atualiza itens: delete os antigos e insere os novos
-    $venda->itens()->delete();
-
-    $total = 0;
-    foreach ($request->produtos as $index => $produtoId) {
-        $quantidade = $request->quantidades[$index];
-        $valor = $request->valores[$index];
-        $total += $quantidade * $valor;
-
-        $venda->itens()->create([
-            'produto_id' => $produtoId,
-            'quantidade' => $quantidade,
-            'valor_unitario' => $valor,
+        $request->validate([
+            'cliente_id' => 'nullable|exists:clientes,id',
+            'forma_pagamento_id' => 'required|exists:forma_pagamentos,id',
+            'produtos' => 'required|array',
+            'quantidades' => 'required|array',
+            'valores' => 'required|array',
+            'parcelas_valores' => 'required|array',
+            'parcelas_datas' => 'required|array',
         ]);
+
+        $venda->cliente_id = $request->cliente_id;
+        $venda->forma_pagamento_id = $request->forma_pagamento_id;
+        $venda->save();
+
+        $venda->itens()->delete();
+
+        $total = 0;
+        foreach ($request->produtos as $index => $produtoId) {
+            $quantidade = $request->quantidades[$index];
+            $valor = $request->valores[$index];
+            $total += $quantidade * $valor;
+
+            $venda->itens()->create([
+                'produto_id' => $produtoId,
+                'quantidade' => $quantidade,
+                'valor_unitario' => $valor,
+            ]);
+        }
+
+        $venda->valor_total = $total;
+        $venda->save();
+
+        $venda->parcelas()->delete();
+
+        foreach ($request->parcelas_valores as $idx => $valorParcela) {
+            $venda->parcelas()->create([
+                'valor' => $valorParcela,
+                'vencimento' => $request->parcelas_datas[$idx],
+                'pago' => false,
+            ]);
+        }
+
+        return redirect()->route('vendas.index')->with('success', 'Venda atualizada com sucesso!');
     }
 
-    // Atualiza total da venda
-    $venda->valor_total = $total;
-    $venda->save();
-
-    // Atualiza parcelas: delete as antigas e cria novas
-    $venda->parcelas()->delete();
-
-    foreach ($request->parcelas_valores as $idx => $valorParcela) {
-        $venda->parcelas()->create([
-            'valor' => $valorParcela,
-            'vencimento' => $request->parcelas_datas[$idx],
-            'pago' => false,
-        ]);
-    }
-
-    return redirect()->route('vendas.index')->with('success', 'Venda atualizada com sucesso!');
-}
-
+    // Geração de PDF da venda
     public function exportarPdf($id)
     {
         $venda = Venda::with(['cliente', 'itens.produto', 'parcelas', 'formaPagamento'])->findOrFail($id);
@@ -148,40 +151,38 @@ class VendaController extends Controller
         return $pdf->download("venda_{$id}.pdf");
     }
 
+    // Exclusão de venda
     public function destroy($id)
-{
-    $venda = Venda::findOrFail($id);
-    $venda->itens()->delete();
-    $venda->parcelas()->delete();
-    $venda->delete();
-
-    return redirect()->route('vendas.index')->with('success', 'Venda excluída com sucesso!');
-}
-
-    public function createCliente()
     {
-        return view('vendas.cliente_add');  // Assumindo que a view está em resources/views/clientes/create.blade.php
+        $venda = Venda::findOrFail($id);
+        $venda->itens()->delete();
+        $venda->parcelas()->delete();
+        $venda->delete();
+
+        return redirect()->route('vendas.index')->with('success', 'Venda excluída com sucesso!');
     }
 
-    // Armazena o cliente via formulário padrão (rota POST /clientes)
-   public function storeCliente(Request $request)
-{
-    // Validação (opcional)
-    $validated = $request->validate([
-        'nome' => 'required|string|max:255',
-        'cpf' => 'required|string|max:20',
-        'tipo' => 'required|in:Física,Jurídica',
-        // outros campos conforme necessário
-    ]);
+    // Formulário de criação de cliente
+    public function createCliente()
+    {
+        return view('vendas.cliente_add');
+    }
 
-    // Criação do cliente
-    Cliente::create($validated);
+    // Armazenamento de cliente via formulário padrão
+    public function storeCliente(Request $request)
+    {
+        $validated = $request->validate([
+            'nome' => 'required|string|max:255',
+            'cpf' => 'required|string|max:20',
+            'tipo' => 'required|in:Física,Jurídica',
+        ]);
 
-    // Redireciona de volta com mensagem de sucesso
-    return redirect()->back()->with('success', 'Cliente cadastrado com sucesso!');
-}
+        Cliente::create($validated);
 
-    // Armazena cliente via AJAX (rota POST /clientes/ajax)
+        return redirect()->back()->with('success', 'Cliente cadastrado com sucesso!');
+    }
+
+    // Armazenamento de cliente via AJAX
     public function storeClienteAjax(Request $request)
     {
         $request->validate([
@@ -198,41 +199,86 @@ class VendaController extends Controller
             'success' => true,
             'cliente' => $cliente,
             'message' => 'Cliente cadastrado com sucesso via AJAX.'
-            
         ]);
     }
 
-   
-public function indexProdutos()
-{
-    $produtos = Produto::orderBy('nome')->paginate(10);
-    return view('vendas.produtos', compact('produtos'));
-}
+    // Listagem de produtos
+    public function indexProdutos()
+    {
+        $produtos = Produto::orderBy('nome')->paginate(10);
+        return view('vendas.produtos', compact('produtos'));
+    }
 
-public function createProduto()
-{
-    return view('vendas.produto_add');
+    // Formulário de criação de produto
+    public function createProduto()
+    {
+        return view('vendas.produto_add');
+    }
 
-}
+    // Armazenamento de produto
+    public function storeProduto(Request $request)
+    {
+        $request->validate([
+            'nome' => 'required|string|max:255',
+            'descricao' => 'nullable|string|max:1000',
+            'preco' => 'required|numeric|min:0',
+            'estoque' => 'required|integer|min:0',
+        ]);
 
-public function storeProduto(Request $request)
-{
-    $request->validate([
-        'nome' => 'required|string|max:255',
-        'descricao' => 'nullable|string|max:1000',
-        'preco' => 'required|numeric|min:0',
-        'estoque' => 'required|integer|min:0',
-    ]);
+        Produto::create([
+            'nome' => $request->nome,
+            'descricao' => $request->descricao,
+            'preco' => $request->preco,
+            'estoque' => $request->estoque,
+        ]);
 
-    Produto::create([
-        'nome' => $request->nome,
-        'descricao' => $request->descricao,
-        'preco' => $request->preco,
-        'estoque' => $request->estoque,
-    ]);
+        return redirect()->route('vendas.produtos.index')->with('success', 'Produto cadastrado com sucesso!');
+    }
 
-    return redirect()->route('vendas.produtos.index')->with('success', 'Produto cadastrado com sucesso!');
-}
+    // Relatório de vendas (visual)
+    public function relatorio(Request $request)
+    {
+        $query = Venda::with(['cliente', 'formaPagamento', 'user']);
 
+        if ($request->filled('data')) {
+            $query->whereDate('created_at', $request->data);
+        }
 
+        if ($request->filled('mes')) {
+            $query->whereMonth('created_at', date('m', strtotime($request->mes)))
+                  ->whereYear('created_at', date('Y', strtotime($request->mes)));
+        }
+
+        $vendas = $query->paginate(10);
+        $totalGeral = $query->sum('valor_total');
+
+        return view('vendas.relatorio', compact('vendas', 'totalGeral'));
+    }
+
+    // Relatório PDF
+    public function relatorioPdf(Request $request)
+    {
+        $query = Venda::with(['cliente', 'formaPagamento', 'user']);
+
+        if ($request->filled('data')) {
+            $query->whereDate('created_at', $request->data);
+        }
+
+        if ($request->filled('mes')) {
+            $query->whereMonth('created_at', date('m', strtotime($request->mes)))
+                  ->whereYear('created_at', date('Y', strtotime($request->mes)));
+        }
+
+        $vendas = $query->get();
+        $totalGeral = $vendas->sum('valor_total');
+
+        $pdf = Pdf::loadView('vendas.relatorio_pdf', compact('vendas', 'totalGeral'));
+        return $pdf->download('relatorio_vendas.pdf');
+    }
+
+    // Relatório Excel
+    public function relatorioExcel(Request $request)
+    {
+        return Excel::download(new RelatorioVendasExport($request), 'relatorio_vendas.xlsx');
+    }
 }

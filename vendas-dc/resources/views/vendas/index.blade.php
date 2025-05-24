@@ -14,6 +14,18 @@
     </a>
   </div>
 
+  <div class="container mt-4">
+  <div class="d-flex justify-content-between align-items-center mb-3">
+    <a href="{{ route('vendas.produtos.index') }}" class="btn btn-primary">Lista Produtos</a>
+  </div>
+
+  <div class="mb-3 text-end">
+    <a href="{{ route('vendas.relatorio') }}" class="btn btn-primary">
+        📊 Ver Relatório de Vendas
+    </a>
+</div>
+
+
 
   <!-- Filtros -->
   <form method="GET" action="{{ route('vendas.index') }}" class="row g-3 mb-4">

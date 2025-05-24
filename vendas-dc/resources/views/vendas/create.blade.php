@@ -4,7 +4,7 @@
 <div class="container mt-4">
   <h3>Cadastrar Nova Venda</h3>
 
-  <form action="{{ route('vendas.store') }}" method="POST" id="form-venda">
+  <form method="POST" action="{{ route('vendas.store') }}">
     @csrf
 
     <!-- Cliente -->
@@ -100,7 +100,7 @@
     </table>
     <button type="button" class="btn btn-secondary mb-3" id="add-parcela">Adicionar Parcela</button>
 
-    <button type="submit" class="btn btn-primary">Salvar Venda</button>
+    <button type="submit" class="btn btn-primary">Salvar</button>
   </form>
 </div>
 
