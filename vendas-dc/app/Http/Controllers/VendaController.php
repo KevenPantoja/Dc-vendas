@@ -72,11 +72,11 @@ class VendaController extends Controller
         }
 
         foreach ($request->parcelas_valores as $i => $valor) {
-            Parcela::create([
-                'venda_id' => $venda->id,
-                'valor' => $valor,
-                'data_vencimento' => $request->parcelas_datas[$i],
-            ]);
+           Parcela::create([
+            'venda_id' => $venda->id,
+            'valor' => $valor,
+            'vencimento' => $request->parcelas_datas[$i],
+        ]);
         }
 
         return redirect()->route('vendas.create')->with('success', 'Venda cadastrada com sucesso! Faça um novo cadastro.');

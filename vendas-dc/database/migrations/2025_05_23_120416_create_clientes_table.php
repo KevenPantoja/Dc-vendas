@@ -13,12 +13,12 @@ class CreateClientesTable extends Migration
 
             $table->string('nome'); 
             $table->string('cpf')->unique()->nullable(); 
-            $table->string('tipo_pessoa'); // 'F' para Física ou 'J' para Jurídica
-            $table->string('nome_social')->nullable(); // Nome social ou nome fantasia para PJ
-            $table->string('rg')->nullable(); // RG para pessoa física (pode deixar nulo para PJ)
-            $table->boolean('consumidor_final')->default(false); // Consumidor final (sim = true, não = false)
-            $table->boolean('contribuinte')->default(false); // Contribuinte (sim = true, não = false)
-            $table->decimal('limite_vendas', 15, 2)->default(0); // Limite de vendas, valores com 2 casas decimais
+            $table->string('tipo_pessoa')->default('F');
+            $table->string('nome_social')->nullable();
+            $table->string('rg')->nullable(); 
+            $table->boolean('consumidor_final')->default(false); 
+            $table->boolean('contribuinte')->default(false); 
+            $table->decimal('limite_vendas', 15, 2)->default(0); 
 
             // Endereço
             $table->string('rua')->nullable();
